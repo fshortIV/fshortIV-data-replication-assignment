@@ -1,0 +1,67 @@
+---
+title: "Data Replication - Optimal Group Size in a Highly Social Animal"
+author: "Frank Short"
+date: "12/7/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading
+
+```{r Loading}
+library(curl)
+f <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/fGC%20and%20daily%20travel%20distance%20data.csv?token=AVR3CJ7CWBFINWSW2V3LX33BWC5LY")
+fgcdata <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+names(fgcdata)<-c('ID','FGC',"DTD","LogFGC")
+colnames(fgcdata)
+head(fgcdata)
+
+library(curl)
+d <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Annual%20home%20range%20and%20foraging%20predictors.csv?token=AVR3CJ5AK5JN7HYE4ETZAPLBWC7CE")
+foragedata <- read.csv(d, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+colnames(foragedata)
+head(foragedata)
+
+```
+
+## Linear Models
+
+You can also embed plots, for example:
+
+```{r Linear Model FGC}
+library(ggplot2)
+
+lm<- lm(LogFGC ~ DTD, data = fgcdata)
+summary(lm)
+
+lm <- ggplot(data = fgcdata, aes(x = DTD, y = LogFGC))
+lm<- lm + geom_point() 
+lm<- lm + geom_smooth(method = "lm", formula = y ~ x) + xlab("Daily Travel Distance (km)") + ylab("Log Fecal Glucocorticoid (ng/g dry feces)") + theme_classic() + xlim(3, 9) + ylim(1.6, 2.4) + geom_text(x=6, y=2.375, label="y = 0.02x + 1.80", size=3.5)
+lm
+```
+
+```{r Linear Model Foraging}
+lm2<- lm(Proportion.time.foraging ~ Average.group.size, data = foragedata)
+summary(lm2)
+
+lm <- ggplot(data = foragedata, aes(x = Average.group.size, y = Proportion.time.foraging))
+lm<- lm + geom_point() 
+lm<- lm + geom_smooth(method = "lm", formula = y ~ x) + xlab("Group Size") + ylab("Proportion time spent foraging") + theme_classic() + xlim(10, 110) + ylim(0.50, 0.85) + geom_text(x=61, y=0.8375, label="y = 0.002x + 0.609", size=3.5)
+lm
+```
+
+```{r Annual Home Range GEE}
+library(nlme)
+
+nlmeAnnual<- nlme(model = Annual.home.range.size..sq.km. ~ log(Average.group.size) + log(Average.group.size)^2 + Cumulative.rainfall..mm. + Rainfall.evenness + Average.maximum.temperature..degrees.C., data = foragedata)
+
+summary(geeAnnual)
+
+lm <- ggplot(data = foragedata, aes(x = Average.group.size, y = Proportion.time.foraging))
+lm<- lm + geom_point() 
+lm<- lm + geom_smooth(method = "lm", formula = y ~ x) + xlab("Group Size") + ylab("Proportion time spent foraging") + theme_classic() + xlim(10, 110) + ylim(0.50, 0.85) + geom_text(x=61, y=0.8375, label="y = 0.002x + 0.609", size=3.5)
+lm
+```
