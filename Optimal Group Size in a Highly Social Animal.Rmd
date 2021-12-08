@@ -55,10 +55,28 @@ lm
 
 ```{r Annual Home Range GEE}
 library(nlme)
+library(gamm4)
+library(mgcViz)
+library(AICcmodavg)
 
 nlmeAnnual<- nlme(model = Annual.home.range.size..sq.km. ~ log(Average.group.size) + log(Average.group.size)^2 + Cumulative.rainfall..mm. + Rainfall.evenness + Average.maximum.temperature..degrees.C., data = foragedata)
 
 summary(geeAnnual)
+
+Annualgamm<-gamm4(Annual.home.range.size..sq.km. ~ s(Average.group.size), data=foragedata,random=~(1|X.U.FEFF.Group.ID))
+summary(Annualgamm$gam)
+b <- getViz(Annualgamm$gam)
+check(b)
+AICc(Annualgamm$mer)
+
+plotanhr1 <- getViz(Annualgamm$gam)
+print(plot(plotanhr1, allTerms = T), pages = 1)
+
+b <- getViz(Annualgamm$gam)
+o <- plot( sm(b, 1) )
+o +   l_ciPoly() + l_fitLine(colour = "blue",size=1) +  l_rug(mapping = aes(x=x), alpha = 0.8) +
+  xlab("FAI")+ylab("Autocorrelated Kernel Density Estimate (km) \ns(FAI)")+ggtitle("FAI and Autocorrelated Kernel Density Estimate")+ theme_classic()
+
 
 lm <- ggplot(data = foragedata, aes(x = Average.group.size, y = Proportion.time.foraging))
 lm<- lm + geom_point() 
