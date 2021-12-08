@@ -13,23 +13,23 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r Loading}
 library(curl)
-f <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/fGC%20and%20daily%20travel%20distance%20data.csv?token=AVR3CJ7CWBFINWSW2V3LX33BWC5LY")
+f <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/fGC%20and%20daily%20travel%20distance%20data.csv?token=AVR3CJ6WHKQWB2CHR7IA4E3BWEKMA")
 fgcdata <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 names(fgcdata)<-c('ID','FGC',"DTD","LogFGC")
 colnames(fgcdata)
 head(fgcdata)
 
-d <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Annual%20home%20range%20and%20foraging%20predictors.csv?token=AVR3CJ677DDRRZ5QVNZECJLBWDS6Q")
+d <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Annual%20home%20range%20and%20foraging%20predictors.csv?token=AVR3CJ2FA5VGOVLFGFPDH4TBWEKO2")
 annualdata <- read.csv(d, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 colnames(annualdata)
 head(annualdata)
 
-g <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Monthly%20ranging%20pattern%20predictors.csv?token=AVR3CJ6AETFLAI7WWGRERRTBWEDDK")
+g <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Monthly%20ranging%20pattern%20predictors.csv?token=AVR3CJZF3XMEKNFOKPVVXEDBWEKRU")
 monthlyhrdata <- read.csv(g, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 colnames(monthlyhrdata)
 head(monthlyhrdata)
 
-h <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Monthly%20fGC%20predictors.csv?token=AVR3CJ377UQDF5ZFH3Y2VCLBWEHGM")
+h <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Monthly%20fGC%20predictors.csv?token=AVR3CJ32CHTB7RO55QBQM6LBWEKUE")
 monthlyfgcdata <- read.csv(h, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 colnames(monthlyfgcdata)
 head(monthlyfgcdata)
@@ -60,12 +60,17 @@ groupsize4 <- groupsize4 + geom_point()
 groupsize4 <- groupsize4 + stat_smooth(method = "lm", formula = y ~ x + I(x^2), size = 1)
 groupsize4
 
+groupsize5 <- ggplot(data = monthlyfgcdata, aes(x = Group.size, y = fGC..g.ng.dry.feces.))
+groupsize5 <- groupsize5 + geom_point() 
+groupsize5 <- groupsize5 + stat_smooth(method = "lm", formula = y ~ x + I(x^2), size = 1)
+groupsize5
+
 
 
 ```
 ## Linear Models
 
-You can also embed plots, for example:
+
 
 ```{r Linear Model FGC}
 library(ggplot2)
@@ -89,7 +94,7 @@ lm<- lm + geom_smooth(method = "lm", formula = y ~ x) + xlab("Group Size") + yla
 lm
 ```
 
-```{r Annual Home Range GEE}
+```{r GEE Analysis}
 library(nlme)
 library(gamm4)
 library(mgcViz)
@@ -117,6 +122,27 @@ geeMonthlyFGC<-  geeglm(formula = log(fGC..g.ng.dry.feces.) ~ Group.size + I(Gro
 corstr = "ar1")
 summary(geeMonthlyFGC)
 
+```
 
+```{r GEE Plotting}
+AnnualPlotlm<- lm(Annual.home.range.size..sq.km. ~ Average.group.size + I(Average.group.size^2), data = annualdata)
+summary(AnnualPlot)
+# I did it!! Note: They do not explain AT ALL how their plots were generated like this.
+
+AnnualPlot <- ggplot(data = annualdata, aes(x = Average.group.size, y = Annual.home.range.size..sq.km.))
+AnnualPlot <- AnnualPlot + geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + xlab("Group Size") + ylab("Home Range Size") + theme_classic() + xlim(10, 110) + ylim(6, 24) + geom_text(x=60, y=23.5, label="Annual: y = 0.003x^2 - 0.346x + 22.539", size=3.5) 
+AnnualPlot
+
+MonthlyPlotlm<- lm(Monthly.home.range.size..sq.km. ~ Group.size + I(Group.size^2), data = monthlyhrdata)
+summary(MonthlyPlotlm)
+
+MonthlyPlot <- ggplot(data = monthlyhrdata, aes(x = Group.size, y = Monthly.home.range.size..sq.km.))
+MonthlyPlot <- MonthlyPlot + geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + xlab("Group Size") + ylab("Monthly Home Range Size") + theme_classic() + xlim(10, 110) + ylim(6, 24) + geom_text(x=60, y=22.5, label="Monthly: y = 0.004x^2 - 0.417x + 20.019", size=3.5)
+MonthlyPlot
+
+BothPlot <- AnnualPlot + geom_smooth(aes(x = Group.size, y = Monthly.home.range.size..sq.km.), data = monthlyhrdata, 
+              method = "lm", formula = y ~ x + I(x^2), color = "red")
+BothPlot <- BothPlot + geom_text(x=60, y=22.5, label="Monthly: y = 0.004x^2 - 0.417x + 20.019", size=3.5)
+BothPlot
 
 ```
