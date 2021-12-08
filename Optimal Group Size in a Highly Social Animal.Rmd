@@ -19,14 +19,50 @@ names(fgcdata)<-c('ID','FGC',"DTD","LogFGC")
 colnames(fgcdata)
 head(fgcdata)
 
-library(curl)
-d <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Annual%20home%20range%20and%20foraging%20predictors.csv?token=AVR3CJ5AK5JN7HYE4ETZAPLBWC7CE")
-foragedata <- read.csv(d, header = TRUE, sep = ",", stringsAsFactors = FALSE)
-colnames(foragedata)
-head(foragedata)
+d <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Annual%20home%20range%20and%20foraging%20predictors.csv?token=AVR3CJ677DDRRZ5QVNZECJLBWDS6Q")
+annualdata <- read.csv(d, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+colnames(annualdata)
+head(annualdata)
+
+g <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Monthly%20ranging%20pattern%20predictors.csv?token=AVR3CJ6AETFLAI7WWGRERRTBWEDDK")
+monthlyhrdata <- read.csv(g, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+colnames(monthlyhrdata)
+head(monthlyhrdata)
+
+h <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Monthly%20fGC%20predictors.csv?token=AVR3CJ377UQDF5ZFH3Y2VCLBWEHGM")
+monthlyfgcdata <- read.csv(h, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+colnames(monthlyfgcdata)
+head(monthlyfgcdata)
 
 ```
+## Preliminary Data Visualization
 
+```{r Data Visualization}
+library(ggplot2)
+
+groupsize1 <- ggplot(data = annualdata, aes(x = Average.group.size, y = Annual.home.range.size..sq.km.))
+groupsize1 <- groupsize1 + geom_point() 
+groupsize1 <- groupsize1 + stat_smooth(method = "lm", formula = y ~ x + I(x^2), size = 1)
+groupsize1
+
+groupsize2 <- ggplot(data = monthlyhrdata, aes(x = Group.size, y = Monthly.home.range.size..sq.km.))
+groupsize2 <- groupsize1 + geom_point() 
+groupsize2 <- groupsize1 + stat_smooth(method = "lm", formula = y ~ x + I(x^2), size = 1)
+groupsize2
+
+groupsize3 <- ggplot(data = monthlyhrdata, aes(x = Group.size, y = Average.daily.travel..km.))
+groupsize3 <- groupsize3 + geom_point() 
+groupsize3 <- groupsize3 + stat_smooth(method = "lm", formula = y ~ x + I(x^2), size = 1)
+groupsize3
+
+groupsize4 <- ggplot(data = monthlyhrdata, aes(x = Group.size, y = Evenness.of.space.use))
+groupsize4 <- groupsize4 + geom_point() 
+groupsize4 <- groupsize4 + stat_smooth(method = "lm", formula = y ~ x + I(x^2), size = 1)
+groupsize4
+
+
+
+```
 ## Linear Models
 
 You can also embed plots, for example:
@@ -44,10 +80,10 @@ lm
 ```
 
 ```{r Linear Model Foraging}
-lm2<- lm(Proportion.time.foraging ~ Average.group.size, data = foragedata)
+lm2<- lm(Proportion.time.foraging ~ Average.group.size, data = annualdata)
 summary(lm2)
 
-lm <- ggplot(data = foragedata, aes(x = Average.group.size, y = Proportion.time.foraging))
+lm <- ggplot(data = annualdata, aes(x = Average.group.size, y = Proportion.time.foraging))
 lm<- lm + geom_point() 
 lm<- lm + geom_smooth(method = "lm", formula = y ~ x) + xlab("Group Size") + ylab("Proportion time spent foraging") + theme_classic() + xlim(10, 110) + ylim(0.50, 0.85) + geom_text(x=61, y=0.8375, label="y = 0.002x + 0.609", size=3.5)
 lm
@@ -58,28 +94,29 @@ library(nlme)
 library(gamm4)
 library(mgcViz)
 library(AICcmodavg)
+library(gee)
+library(geepack)
 
-nlmeAnnual<- nlme(model = Annual.home.range.size..sq.km. ~ log(Average.group.size) + log(Average.group.size)^2 + Cumulative.rainfall..mm. + Rainfall.evenness + Average.maximum.temperature..degrees.C., data = foragedata)
-
+geeAnnual<-  geeglm(formula = log(Annual.home.range.size..sq.km.) ~ Average.group.size + I(Average.group.size^2) + Cumulative.rainfall..mm. + Rainfall.evenness + Average.maximum.temperature..degrees.C., id = X.U.FEFF.Group.ID, data = annualdata, corstr = "ar1")
 summary(geeAnnual)
 
-Annualgamm<-gamm4(Annual.home.range.size..sq.km. ~ s(Average.group.size), data=foragedata,random=~(1|X.U.FEFF.Group.ID))
-summary(Annualgamm$gam)
-b <- getViz(Annualgamm$gam)
-check(b)
-AICc(Annualgamm$mer)
 
-plotanhr1 <- getViz(Annualgamm$gam)
-print(plot(plotanhr1, allTerms = T), pages = 1)
+geeMonthlyHr<-  geeglm(formula = log(Monthly.home.range.size..sq.km.) ~ Group.size + I(Group.size^2) + Cumulative.rainfall..mm. + Average.maximum.temperature..degrees.C., id = X.U.FEFF.Group.ID, data = monthlyhrdata,
+corstr = "ar1")
+summary(geeMonthlyHr)
 
-b <- getViz(Annualgamm$gam)
-o <- plot( sm(b, 1) )
-o +   l_ciPoly() + l_fitLine(colour = "blue",size=1) +  l_rug(mapping = aes(x=x), alpha = 0.8) +
-  xlab("FAI")+ylab("Autocorrelated Kernel Density Estimate (km) \ns(FAI)")+ggtitle("FAI and Autocorrelated Kernel Density Estimate")+ theme_classic()
+geeMonthlyDT<-  geeglm(formula = log(Average.daily.travel..km.) ~ Group.size + I(Group.size^2) + Cumulative.rainfall..mm. + Average.maximum.temperature..degrees.C., id = X.U.FEFF.Group.ID, data = monthlyhrdata,
+corstr = "ar1")
+summary(geeMonthlyDT)
+
+geeMonthlyEvenness<-  geeglm(formula = Evenness.of.space.use ~ Group.size + I(Group.size^2) + Cumulative.rainfall..mm. + Average.maximum.temperature..degrees.C., id = X.U.FEFF.Group.ID, data = monthlyhrdata,
+corstr = "ar1")
+summary(geeMonthlyEvenness)
+
+geeMonthlyFGC<-  geeglm(formula = log(fGC..g.ng.dry.feces.) ~ Group.size + I(Group.size^2) + Cumulative.rainfall..mm. + Average.maximum.temperature..degrees.C., id = X.U.FEFF.Group.ID, data = monthlyfgcdata,
+corstr = "ar1")
+summary(geeMonthlyFGC)
 
 
-lm <- ggplot(data = foragedata, aes(x = Average.group.size, y = Proportion.time.foraging))
-lm<- lm + geom_point() 
-lm<- lm + geom_smooth(method = "lm", formula = y ~ x) + xlab("Group Size") + ylab("Proportion time spent foraging") + theme_classic() + xlim(10, 110) + ylim(0.50, 0.85) + geom_text(x=61, y=0.8375, label="y = 0.002x + 0.609", size=3.5)
-lm
+
 ```
