@@ -125,25 +125,76 @@ Estimate = c(geeAnnual$coefficients[1],geeAnnual$coefficients[2],geeAnnual$coeff
 Estimate = as.numeric(Estimate)
 Estimate <- format(Estimate, digits=3)
 
+
+EstimateHr = c(geeMonthlyHr$coefficients[1],geeMonthlyHr$coefficients[2],geeMonthlyHr$coefficients[3],geeMonthlyHr$coefficients[4],geeMonthlyHr$coefficients[5])
+EstimateHr = formatC(EstimateHr, format = "e", digits = 3)
+
+EstimateDT = c(geeMonthlyDT$coefficients[1],geeMonthlyDT$coefficients[2],geeMonthlyDT$coefficients[3],geeMonthlyDT$coefficients[4],geeMonthlyDT$coefficients[5])
+EstimateDT = formatC(EstimateDT, format = "e", digits = 3)
+
+EstimateEven = c(geeMonthlyEvenness$coefficients[1],geeMonthlyEvenness$coefficients[2],geeMonthlyEvenness$coefficients[3],geeMonthlyEvenness$coefficients[4],geeMonthlyEvenness$coefficients[5])
+EstimateEven = formatC(EstimateEven, format = "e", digits = 3)
+
+EstimateFGC = c(geeMonthlyFGC$coefficients[1],geeMonthlyFGC$coefficients[2],geeMonthlyFGC$coefficients[3],geeMonthlyFGC$coefficients[4],geeMonthlyFGC$coefficients[5])
+EstimateFGC = formatC(EstimateFGC, format = "e", digits = 3)
+
 Wald = c(summary(geeAnnual)$coefficients[1,3],summary(geeAnnual)$coefficients[2,3],summary(geeAnnual)$coefficients[3,3],summary(geeAnnual)$coefficients[4,3],summary(geeAnnual)$coefficients[5,3],summary(geeAnnual)$coefficients[6,3])
 Wald = as.numeric(Wald)
 Wald <- format(Wald, digits=3)
 
+WaldHR = c(summary(geeMonthlyHr)$coefficients[1,3],summary(geeMonthlyHr)$coefficients[2,3],summary(geeMonthlyHr)$coefficients[3,3],summary(geeMonthlyHr)$coefficients[4,3],summary(geeMonthlyHr)$coefficients[5,3])
+WaldHR = as.numeric(WaldHR)
+WaldHR <- format(WaldHR, digits=3)
+
+WaldDT = c(summary(geeMonthlyDT)$coefficients[1,3],summary(geeMonthlyDT)$coefficients[2,3],summary(geeMonthlyDT)$coefficients[3,3],summary(geeMonthlyDT)$coefficients[4,3],summary(geeMonthlyDT)$coefficients[5,3])
+WaldDT = as.numeric(WaldDT)
+WaldDT <- format(WaldDT, digits=3)
+
+WaldEven = c(summary(geeMonthlyEvenness)$coefficients[1,3],summary(geeMonthlyEvenness)$coefficients[2,3],summary(geeMonthlyEvenness)$coefficients[3,3],summary(geeMonthlyEvenness)$coefficients[4,3],summary(geeMonthlyEvenness)$coefficients[5,3])
+WaldEven = as.numeric(WaldEven)
+WaldEven <- format(WaldEven, digits=3)
+
+WaldFGC = c(summary(geeMonthlyFGC)$coefficients[1,3],summary(geeMonthlyFGC)$coefficients[2,3],summary(geeMonthlyFGC)$coefficients[3,3],summary(geeMonthlyFGC)$coefficients[4,3],summary(geeMonthlyFGC)$coefficients[5,3])
+WaldFGC = as.numeric(WaldFGC)
+WaldFGC <- format(WaldFGC, digits=3)
+
+
 P = c(summary(geeAnnual)$coefficients[1,4],summary(geeAnnual)$coefficients[2,4],summary(geeAnnual)$coefficients[3,4],summary(geeAnnual)$coefficients[4,4],summary(geeAnnual)$coefficients[5,4],summary(geeAnnual)$coefficients[6,4])
 P = as.numeric(P)
 P <- format(P, digits=3)
-       
+P <- c("0.053","0.049","0.011","0.740","0.019","0.336")
+
+PHR = c(summary(geeMonthlyHr)$coefficients[1,4],summary(geeMonthlyHr)$coefficients[2,4],summary(geeMonthlyHr)$coefficients[3,4],summary(geeMonthlyHr)$coefficients[4,4],summary(geeMonthlyHr)$coefficients[5,4])
+PHR = c(formatC(PHR[1:3], format = "g", digits = 3), formatC(PHR[4:5], format = "f", digits = 3))
+PHR[1:3] = "<0.001"
+
+PDT = c(summary(geeMonthlyDT)$coefficients[1,4],summary(geeMonthlyDT)$coefficients[2,4],summary(geeMonthlyDT)$coefficients[3,4],summary(geeMonthlyDT)$coefficients[4,4],summary(geeMonthlyDT)$coefficients[5,4])
+PDT = c(formatC(PDT[1], format = "g", digits=3),formatC(PDT[2:5], format = "f", digits=3))
+PDT[1] = "<0.001"
+
+PEven = c(summary(geeMonthlyEvenness)$coefficients[1,4],summary(geeMonthlyEvenness)$coefficients[2,4],summary(geeMonthlyEvenness)$coefficients[3,4],summary(geeMonthlyEvenness)$coefficients[4,4],summary(geeMonthlyEvenness)$coefficients[5,4])
+PEven = c(formatC(PEven[1:3], format = "g", digits=3),formatC(PEven[4:5], format = "f", digits=3))
+PEven[1:3] = "<0.001"
+
+PGC = c(summary(geeMonthlyFGC)$coefficients[1,4],summary(geeMonthlyFGC)$coefficients[2,4],summary(geeMonthlyFGC)$coefficients[3,4],summary(geeMonthlyFGC)$coefficients[4,4],summary(geeMonthlyFGC)$coefficients[5,4])
+PGC[1:3] = "<0.001"
+PGC[4] = "0.207"
+PGC[5] = "0.557"
+
+
 library(kableExtra)
 GEETable <- data.frame( 
   Dependent_Variable = c("Home range (annual)","Intercept","Group size","Group size^2","Cumulative rainfall","Rainfall evenness","Average maximum temperature","Home range (monthly)","Intercept","Group size","Group size^2","Cumulative rainfall","Average maximum temperature","Average daily distance traveled (monthly)","Intercept","Group size","Group size^2","Cumulative rainfall","Average maximum temperature","Evenness of space use (monthly)","Intercept","Group size","Group size^2","Cumulative rainfall","Average maximum temperature","Fecal glucocorticoids (monthly)","Intercept","Group size","Group size^2","Cumulative rainfall","Average maximum temperature") ,
-  Estimate = c("",Estimate),
-  Wald = c("",Wald),
-  P = c("",P)
+  Estimate = c("",Estimate,"",EstimateHr,"",EstimateDT,"",EstimateEven,"",EstimateFGC),
+  Wald = c("",Wald,"",WaldHR,"",WaldDT,"",WaldEven,"",WaldFGC),
+  P = c("",P,"",PHR,"",PDT,"",PEven,"",PGC)
 )
 
-GEETable %>%
+GeeKable<- GEETable %>%
   kbl(caption = "Results from GEEs") %>%
   kable_classic(full_width = F, html_font = "Cambria")
+row_spec(GeeKable, row=c(3,4,6,10,11,16,17,22,23,28,29), bold = TRUE)
+
 
   
   
