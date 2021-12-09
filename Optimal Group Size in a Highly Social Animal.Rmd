@@ -125,47 +125,47 @@ summary(geeMonthlyFGC)
 ```
 
 ```{r GEE Plotting}
+library(gridExtra)
 AnnualPlotlm<- lm(Annual.home.range.size..sq.km. ~ Average.group.size + I(Average.group.size^2), data = annualdata)
 summary(AnnualPlot)
 # I did it!! Note: They do not explain AT ALL how their plots were generated like this.
 
 AnnualPlot <- ggplot(data = annualdata, aes(x = Average.group.size, y = Annual.home.range.size..sq.km.))
-AnnualPlot <- AnnualPlot + geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + xlab("Group Size") + ylab("Home Range Size") + theme_classic() + xlim(10, 110) + ylim(6, 24) + geom_text(x=60, y=23.5, label="Annual: y = 0.003x^2 - 0.346x + 22.539", size=3.5, color="gray28") 
+AnnualPlot <- AnnualPlot + geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + xlab("Group Size") + ylab("Home Range Size") + theme_classic() + xlim(10, 110) + ylim(6, 24) + annotate("text",x=60, y=23.5, label="Annual: y = 0.003x^2 - 0.346x + 22.539", size=3.5) 
 AnnualPlot
 
 MonthlyPlotlm<- lm(Monthly.home.range.size..sq.km. ~ Group.size + I(Group.size^2), data = monthlyhrdata)
 summary(MonthlyPlotlm)
 
 MonthlyPlot <- ggplot(data = monthlyhrdata, aes(x = Group.size, y = Monthly.home.range.size..sq.km.))
-MonthlyPlot <- MonthlyPlot + geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + xlab("Group Size") + ylab("Monthly Home Range Size") + theme_classic() + xlim(10, 110) + ylim(6, 24) + geom_text(x=60, y=22.5, label="Monthly: y = 0.004x^2 - 0.417x + 20.019", size=3.5)
+MonthlyPlot <- MonthlyPlot + geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + xlab("Group Size") + ylab("Monthly Home Range Size") + theme_classic() + xlim(10, 110) + ylim(6, 24) + annotate("text",x=60, y=22.5, label="Monthly: y = 0.004x^2 - 0.417x + 20.019", size=3.5)
 MonthlyPlot
 
 BothPlot <- AnnualPlot + geom_smooth(aes(x = Group.size, y = Monthly.home.range.size..sq.km.), data = monthlyhrdata, 
               method = "lm", formula = y ~ x + I(x^2), color = "red")
-BothPlot <- BothPlot + geom_text(x=60, y=22.5, label="Monthly: y = 0.004x^2 - 0.417x + 20.019", size=3.5, color="gray28") + geom_text(x=60, y=17, label="Annual", size=5) + geom_text(x=80, y=7, label="Monthly", size=5)
+BothPlot <- BothPlot +  annotate("text",x=60, y=22, label="Monthly: y = 0.004x^2 - 0.417x + 20.019", size=3.5) + annotate("text",x=60, y=17, label="Annual", size=4) + annotate("text", x=80, y=7, label="Monthly", size=4)
 BothPlot
 
 DailyTravelPlotlm<- lm(Average.daily.travel..km. ~ Group.size + I(Group.size^2), data = monthlyhrdata)
 summary(DailyTravelPlotlm)
 
 DailyTravelPlot <- ggplot(data = monthlyhrdata, aes(x = Group.size, y = Average.daily.travel..km.))
-DailyTravelPlot <- DailyTravelPlot + geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + xlab("Group Size") + ylab("Daily Travel Distance (km") + theme_classic() + xlim(10, 110) + ylim(4.4, 6.0) + geom_text(x=60, y=5.9, label="Monthly: y = 0.000475x^2 - 0.056x + 6.249", size=3.5,color="gray28")
+DailyTravelPlot <- DailyTravelPlot + geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + xlab("Group Size") + ylab("Daily Travel Distance (km)") + theme_classic() + xlim(10, 110) + ylim(4.4, 6.0) + annotate("text",x=60.5, y=5.9, label="Monthly: y = 0.000475x^2 - 0.056x + 6.249", size=3.5) + annotate("text",x=60, y=5.2, label="Monthly", size=4)
 DailyTravelPlot
 
 EvennessPlotlm<- lm(Evenness.of.space.use ~ Group.size + I(Group.size^2), data = monthlyhrdata)
 summary(EvennessPlotlm)
 
 EvennessPlot <- ggplot(data = monthlyhrdata, aes(x = Group.size, y = Evenness.of.space.use))
-EvennessPlot <- EvennessPlot + geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + xlab("Group Size") + ylab("Evenness of space use") + theme_classic() + xlim(10, 110) + ylim(4.0, 5.0) + geom_text(x=60, y=4.9, label="Monthly: y = 0.0002x^2 - 0.020x + 4.710", size=3.5, color="gray28") 
+EvennessPlot <- EvennessPlot + geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + xlab("Group Size") + ylab("Evenness of space use") + theme_classic() + xlim(10, 110) + ylim(4.0, 5.0) + annotate("text",x=60, y=4.9, label="Monthly: y = 0.0002x^2 - 0.020x + 4.710", size=3.5) + annotate("text", x=60, y=4.35, label="Monthly", size=4)
 EvennessPlot
 
 FGCPlotlm<- lm(fGC..g.ng.dry.feces. ~ Group.size + I(Group.size^2), data = monthlyfgcdata)
 summary(FGCPlotlm)
 
 FGCPlot <- ggplot(data = monthlyfgcdata, aes(x = Group.size, y = fGC..g.ng.dry.feces.))
-FGCPlot <- FGCPlot + geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + xlab("Group Size") + ylab("Fecal glucocorticoid (ng/g dry feces") + theme_classic() + xlim(10, 110) + ylim(70, 92) + geom_text(x=60, y=91, label="Monthly: y = 0.006x^2 - 0.785x + 97.314", size=3.5, color="gray28") + geom_text(x=60, y=17, label="Annual", size=5)
+FGCPlot <- FGCPlot + geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + xlab("Group Size") + ylab("Fecal glucocorticoid (ng/g dry feces)") + theme_classic() + xlim(10, 110) + ylim(70, 92) + annotate("text",x=60, y=91, label="Monthly: y = 0.006x^2 - 0.785x + 97.314", size=3.5) + annotate("text", x=60, y=81.5, label="Monthly", size=4)
 FGCPlot
 
-
-
+grid.arrange(BothPlot, DailyTravelPlot, EvennessPlot, FGCPlot, nrow = 2)
 ```
