@@ -1,43 +1,138 @@
 ---
 title: "Data Replication - Optimal Group Size in a Highly Social Animal"
 author: "Frank Short"
-date: "12/7/2021"
-output: html_document
+date: "12/10/2021"
+output:
+  html_document:
+    theme: cosmo
+    toc: TRUE
+    toc_depth: 2
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Loading
+![Amboseli Baboon](https://upload.wikimedia.org/wikipedia/commons/6/6d/Yellow_Baboon%2C_Amboseli_National_Park%2C_Kenya.jpg)
+![Amboseli Baboon2](https://today.duke.edu/sites/default/files/Matthew_Zipple_2_0.jpg)
+
+## **Optimal Group Size in a Highly Social Animal**
+
+### Background
+
+Group living proposes an interesting question for ecologists, and many theories have been proposed for how this social characteristic of many species may have evolved. There are a number of potential benefits of group living including decreased risk to predators both due to increased vigilance and the selfish herd effect where individuals diffuse risk by situating themselves at the center of a group(Hamilton, 1971). Another example is found in the act of cooperative infant care, whereby different members in the group can aid in taking care of juveniles and thus reduce the costs typically given solely to the mother. However, there are also a myriad of negative consequences of group living. While larger groups may suffer less from between-group competition for food resources, they instead experience higher levels of within-group contest and scramble competition (Majolo et al., 2008). Further, larger groups may also expose themselves to increased disease transmission risk, although recently this has been debated (Ezenwa et al., 2016). Markham et al. (2015) set out to test the impact of group size on ecologically important variables ranging from monthly and annual home range size, daily travel distance, and fecal glucocorticoid concentrations (fGC). The results of this study have crucial implications for the fitness benefits and costs of group living in primates and animals more broadly. 
+
+### Methods
+
+This study was conducted over an 11 year period on wild baboons in the Amboseli-Longido ecosystem along the Kenya–Tanzania
+border in Africa as a part of the Amboseli Baboon Research Project. This ecosystem experiences considerable seasonality with a 5 month dry season with very little or no precipitation and a 7 month wet season with variable precipitation. Environmental variables including maximum daily temperature and total cumulative rainfall were taken each day to be used in the analysis. In addition, rainfall evenness was determined as the spread of rainfall across the months of a given year. Home range size and daily distance traveled were calculated through the usage of both handheld global postioning system (GPS) units carried during focal follows and GPS collars on individuals within groups. Annual home range sizes and monthly home range sizes were calculated via minimum convex polygons (MCP) which define the home range of an animal via the connection of the outer-most points. Daily distance traveled was calculated through the straight line distance between each point from the GPS collar locations. Space use evenness was calculated by the proportion of time spent in 250 x 250 m grid cells. Finaly, fecal glucocorticoid concentrations (fGC) were estimated via lab assay from collected freshly deposited feces. 
+
+### Outline of Replication Project
+
+Markham et al. (2015) used the software Statistical Package for the Social Sciences (SPSS) for all of their analyses. As such, this replication project will essentially be a full reassessment of their analyses using R. Because of this, not all of my results match perfectly, but they all still confirm their findings. This replication will procede as follows:
+
+1. Load data from each of the following data sets: fGC and daily travel distance, annual home range and foraging predictors, monthly ranging pattern predictors, and monthly fGC predictors.
+
+2. Plot the simple bivariate quadratic relationships between annual and monthly home range size and group size, daily travel distance and group size, evenness of space use and group size, and fecal glucocorticoid contentration (fGC) and group size. This will be performed by utilizing a linear model to obtain the coefficients as well as the usage of stat_smooth via `{ggplot2}` to plot a quadratic relationship. 
+
+3. Run and visualize the two linear models of fGC and daily travel distance and proportion of time spent foraging and groupsize using the function lm. This will be complimented by the usage of geom_text to insert line equations and fullrange=TRUE to extrapolate data via `{ggplot2}`. 
+
+4. Produce generalized estimating equation (GEE) models using the function geeglm from the package `{geepack}`on the four groups of data to obtain coefficient, wald test, and p-value estimates reflecting the effect of group size. Markham et al. (2015) note that GEEs are used in this case as they account for repeated measurements (in this case on the same baboon groups) and can work with temporal autocorrelation. In addition, I will create a summary table utilizing the R package `{kableExtra}`.
+
+5. Discuss the results of their study as well as my replication. 
+
+## Step 1: Loading Data
+
+First, I load in the four data sets that I have saved to my repository as csv files. These were converted to comma separated value (csv) from their original excel version as R can only import data via csv. 
 
 ```{r Loading}
+
 library(curl)
-f <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/fGC%20and%20daily%20travel%20distance%20data.csv?token=AVR3CJ6WHKQWB2CHR7IA4E3BWEKMA")
+f <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/fGC%20and%20daily%20travel%20distance%20data.csv")
 fgcdata <- read.csv(f, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 names(fgcdata)<-c('ID','FGC',"DTD","LogFGC")
-colnames(fgcdata)
 head(fgcdata)
 
-d <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Annual%20home%20range%20and%20foraging%20predictors.csv?token=AVR3CJ2FA5VGOVLFGFPDH4TBWEKO2")
+d <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Annual%20home%20range%20and%20foraging%20predictors.csv")
 annualdata <- read.csv(d, header = TRUE, sep = ",", stringsAsFactors = FALSE)
-colnames(annualdata)
 head(annualdata)
 
-g <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Monthly%20ranging%20pattern%20predictors.csv?token=AVR3CJZF3XMEKNFOKPVVXEDBWEKRU")
+g <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Monthly%20ranging%20pattern%20predictors.csv")
 monthlyhrdata <- read.csv(g, header = TRUE, sep = ",", stringsAsFactors = FALSE)
-colnames(monthlyhrdata)
 head(monthlyhrdata)
 
-h <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Monthly%20fGC%20predictors.csv?token=AVR3CJ32CHTB7RO55QBQM6LBWEKUE")
+h <- curl("https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Monthly%20fGC%20predictors.csv")
 monthlyfgcdata <- read.csv(h, header = TRUE, sep = ",", stringsAsFactors = FALSE)
-colnames(monthlyfgcdata)
 head(monthlyfgcdata)
 
 ```
-## Linear Models
+
+## Step 2: Running and Plotting Bivariate Quadratic Relationships
+
+Now, I will be plotting the bivariate relationships using the lm function as well as the quadratic method supplied by stat_smooth in `{ggplot2}`. This was my first hurdle in this replication. The authors do not specify how these plots were generated or in what way they were modeled, as they only discuss the GEE portion of their analysis. In addition, many of the steps they take for their GEE analysis including logging and transforming are confusingly not done here. However, it is clear that they used a similar quadratic method as my coefficients are nearly exactly the same. I will first depict how I created and plotted the first model as the rest are done in very much the same way. 
 
 
+```{r GEE Plotting 1}
+library(ggplot2)
+library(gridExtra)
+AnnualPlotlm<- lm(Annual.home.range.size..sq.km. ~ Average.group.size + I(Average.group.size^2), data = annualdata)
+summary(AnnualPlotlm)
+
+AnnualPlot <- ggplot(data = annualdata, aes(x = Average.group.size, y = Annual.home.range.size..sq.km.))
+AnnualPlot <- AnnualPlot + stat_smooth(method = "lm", formula = y ~ x + I(x^2), fullrange=TRUE) + xlab("Group Size") + ylab("Home Range Size") + theme_classic() + xlim(10, 110) + annotate("text",x=60, y=30, label="Annual: y = 0.003x^2 - 0.346x + 22.539", size=3.5) 
+AnnualPlot
+
+```
+
+Here, I first construct a linear model using lm where I obtain the coefficients to be later added over the plot. To create a quadratic lm, I utilize the formula "Average.group.size + I(Average.group.size^2)" for the predictor variable of group size. 
+
+When creating the plot, I utilized the function stat_smooth with the specification of a quadratic model. In addition, fullrange=TRUE was selected as an option to expand the plotted model past the automatically set x limits so that I can fit the plot to the same specifications as done in the study. The formula is overlaid via the function "annotate" which is similar to geom_text but does not cause issues such as text blurring. 
+
+```{r GEE Plotting 2}
+MonthlyPlotlm<- lm(Monthly.home.range.size..sq.km. ~ Group.size + I(Group.size^2), data = monthlyhrdata)
+summary(MonthlyPlotlm)
+
+MonthlyPlot <- ggplot(data = monthlyhrdata, aes(x = Group.size, y = Monthly.home.range.size..sq.km.))
+MonthlyPlot <- MonthlyPlot + stat_smooth(method = "lm", formula = y ~ x + I(x^2), fullrange=TRUE) + xlab("Group Size") + ylab("Monthly Home Range Size") + theme_classic() + xlim(10, 110) + annotate("text",x=60, y=22.5, label="Monthly: y = 0.004x^2 - 0.417x + 20.019", size=3.5)
+MonthlyPlot
+
+BothPlot <- AnnualPlot + stat_smooth(aes(x = Group.size, y = Monthly.home.range.size..sq.km.), data = monthlyhrdata, 
+              method = "lm", formula = y ~ x + I(x^2), fullrange=TRUE, color = "red")
+BothPlot <- BothPlot +  annotate("text",x=60, y=28, label="Monthly: y = 0.004x^2 - 0.417x + 20.019", size=3.5) + annotate("text",x=60, y=17, label="Annual", size=4) + annotate("text", x=80, y=7, label="Monthly", size=4)
+BothPlot
+
+DailyTravelPlotlm<- lm(Average.daily.travel..km. ~ Group.size + I(Group.size^2), data = monthlyhrdata)
+summary(DailyTravelPlotlm)
+
+DailyTravelPlot <- ggplot(data = monthlyhrdata, aes(x = Group.size, y = Average.daily.travel..km.))
+DailyTravelPlot <- DailyTravelPlot + stat_smooth(method = "lm", formula = y ~ x + I(x^2),fullrange=TRUE) + xlab("Group Size") + ylab("Daily Travel Distance (km)") + theme_classic() + annotate("text",x=60.5, y=6.4, label="Monthly: y = 0.000475x^2 - 0.056x + 6.249", size=3.5) + annotate("text",x=60, y=5.2, label="Monthly", size=4) + xlim(10,110)
+DailyTravelPlot
+
+EvennessPlotlm<- lm(Evenness.of.space.use ~ Group.size + I(Group.size^2), data = monthlyhrdata)
+summary(EvennessPlotlm)
+
+EvennessPlot <- ggplot(data = monthlyhrdata, aes(x = Group.size, y = Evenness.of.space.use))
+EvennessPlot <- EvennessPlot + stat_smooth(method = "lm", formula = y ~ x + I(x^2), fullrange=TRUE) + xlab("Group Size") + ylab("Evenness of space use") + theme_classic() + annotate("text",x=60, y=4.9, label="Monthly: y = 0.0002x^2 - 0.020x + 4.710", size=3.5) + annotate("text", x=60, y=4.35, label="Monthly", size=4) + xlim(10,110)
+EvennessPlot
+
+FGCPlotlm<- lm(fGC..g.ng.dry.feces. ~ Group.size + I(Group.size^2), data = monthlyfgcdata)
+summary(FGCPlotlm)
+
+FGCPlot <- ggplot(data = monthlyfgcdata, aes(x = Group.size, y = fGC..g.ng.dry.feces.))
+FGCPlot <- FGCPlot + stat_smooth(method = "lm", formula = y ~ x + I(x^2), fullrange=TRUE) + xlab("Group Size") + ylab("Fecal glucocorticoid (ng/g dry feces)") + theme_classic() + annotate("text",x=60, y=97, label="Monthly: y = 0.006x^2 - 0.785x + 97.314", size=3.5) + xlim(10,110)+annotate("text", x=60, y=81.5, label="Monthly", size=4)
+FGCPlot
+
+grid.arrange(BothPlot, DailyTravelPlot, EvennessPlot, FGCPlot, nrow = 2)
+```
+![Figure 1](https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Figure%201.jpg)
+
+As you can see, the results from my models accurately depict those done by the authors. I overlaid the monthly home range plot over the annual homerange plot by simply adding to the previously created object using stat_smooth. I also utilized the function grid.arrange from the package`{gridExtra}`to combine each of the four plots. 
+
+
+## Step 3: Running and Plotting Linear Models
+
+Next, I will be created the linear models for the two relationships the authors assessed to be completely linear. This was the simplest and easiest part of the replication. I utilized the lm function again, but this time without any quadratic equation. I set the x and y limits of the graph to match that of those in the paper using xlim and ylim. Once again, the equation was overlaid via annotate. 
 
 ```{r Linear Model FGC}
 library(ggplot2)
@@ -47,28 +142,43 @@ summary(lm)
 
 lm <- ggplot(data = fgcdata, aes(x = DTD, y = LogFGC))
 lm<- lm + geom_point() 
-lm<- lm + geom_smooth(method = "lm", formula = y ~ x) + xlab("Daily Travel Distance (km)") + ylab("Log Fecal Glucocorticoid (ng/g dry feces)") + theme_classic() + xlim(3, 9) + ylim(1.6, 2.4) + geom_text(x=6, y=2.375, label="y = 0.02x + 1.80", size=3.5)
+lm<- lm + geom_smooth(method = "lm", formula = y ~ x,fullrange=TRUE) + xlab("Daily Travel Distance (km)") + ylab("Log Fecal Glucocorticoid (ng/g dry feces)") + theme_classic() + xlim(3, 9) + ylim(1.6, 2.4) + annotate("text",x=6, y=2.375, label="y = 0.02x + 1.80", size=3.5)
 lm
 ```
+
+![Figure2](https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Group_Size_Figure%202.jpg)
+
+Once again, my model is nearly identical to that of the original linear model. 
 
 ```{r Linear Model Foraging}
 lm2<- lm(Proportion.time.foraging ~ Average.group.size, data = annualdata)
 summary(lm2)
 
 lm <- ggplot(data = annualdata, aes(x = Average.group.size, y = Proportion.time.foraging))
-lm<- lm + geom_point() 
-lm<- lm + geom_smooth(method = "lm", formula = y ~ x) + xlab("Group Size") + ylab("Proportion time spent foraging") + theme_classic() + xlim(10, 110) + ylim(0.50, 0.85) + geom_text(x=61, y=0.8375, label="y = 0.002x + 0.609", size=3.5)
+lm <- lm + geom_point() 
+lm <- lm + geom_smooth(method = "lm", formula = y ~ x,fullrange=TRUE) + xlab("Group Size") + ylab("Proportion time spent foraging") + theme_classic() + xlim(10, 110) + ylim(0.50, 0.85) + annotate("text",x=61, y=0.8375, label="y = 0.002x + 0.609", size=3.5)
 lm
 ```
 
-```{r GEE Analysis}
+![Figure3](https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Group_Size_Figure%203.jpg)
+
+The same is also the case here.
+
+## Step 4 Part 1: Producing Generalized Estimating Equation Models
+
+Here, I will be performing the main portion of their analysis, which was assessing the relationship between each of the data sets (Annual Home Range Size, Monthly Home Range Size, Daily Travel Distance, and Fecal Glucocorticoid Concentrations) and group size. This was also a challenge, as their descriptions of how they ran their GEE models were somewhat vague. Because the GEE method using in SPSS is likely not the same used here via `{geepack}`, I was not able to obtain exactly the same coefficients. More importantly, however, my models acchieved significant p-values for the same values as those in the study. As before, I will depict how the first model was run as the rest were created in essentially the same way.  
+
+```{r GEE Analysis 1}
 library(gee)
 library(geepack)
 
 
 geeAnnual<-  geeglm(formula = log(Annual.home.range.size..sq.km.) ~ Average.group.size + I(Average.group.size^2) + Cumulative.rainfall..mm. + Rainfall.evenness + Average.maximum.temperature..degrees.C., id = X.U.FEFF.Group.ID, data = annualdata, corstr = "ar1")
 summary(geeAnnual)
+```
+As you can see, I encorporated each of the variables utilized by the authors using a quadratic GEE via geeglm. The annual home range size was logged, as discussed by the authors. Id was controlled for by the GEE as a repeated measure using "id = X.U.FEFF.Group.ID". Temporal autocorrelation control was implemented via "corstr = "ar1"". The coefficients are not the same as those in the study (which you will see below) but the model has achieved significance for the same variables as that of the authors'.
 
+```{r GEE Analysis 2}
 geeMonthlyHr<-  geeglm(formula = log(Monthly.home.range.size..sq.km.) ~ Group.size + I(Group.size^2) + Cumulative.rainfall..mm. + Average.maximum.temperature..degrees.C., id = X.U.FEFF.Group.ID, data = monthlyhrdata,
 corstr = "ar1")
 summary(geeMonthlyHr)
@@ -84,8 +194,11 @@ summary(geeMonthlyEvenness)
 geeMonthlyFGC<-  geeglm(formula = log(fGC..g.ng.dry.feces.) ~ Group.size + I(Group.size^2) + Cumulative.rainfall..mm. + Average.maximum.temperature..degrees.C., id = X.U.FEFF.Group.ID, data = monthlyfgcdata,
 corstr = "ar1")
 summary(geeMonthlyFGC)
-
 ```
+
+## Step 4 Part 2: Creating a Data Table Using kableExtra
+
+Finally, I will be creating a summary table much like that in the study which will include all of the relevant outputs of my GEEs such as the coefficients, wald values, and p-values. This was also a challenge, and I believe there is likely a much more efficient and less involved way to do this. For each data set, I extracted the coefficient estimates, wald estimates, and p-values using the outputs of the model and combined them into a character or numeric string. I had issues with coercing the values to contain up to 3 decimals, and in some cases I had to manually input values into the string. Finally, the string was combined into a data frame incorporating all of the descriptive components of the analysis. Once in a clean and accurate dataframe, this was then passed on to `{kableExtra}` which was used to stylize the table. row_spec was used to bold significant results and italicize each of the components of the analysis. 
 
 ```{r GEE Table}
 Estimate = c(geeAnnual$coefficients[1],geeAnnual$coefficients[2],geeAnnual$coefficients[3],geeAnnual$coefficients[4],geeAnnual$coefficients[5],geeAnnual$coefficients[6])
@@ -166,56 +279,28 @@ GEETable <- data.frame(
 GeeKable<- GEETable %>%
   kbl(caption = "Results from GEEs") %>%
   kable_classic(full_width = F, html_font = "Cambria")
-GeeKable<- row_spec(GeeKable, row=c(3,4,6,10,11,16,17,22,23,28,29), bold = TRUE)
+GeeKable<- row_spec(GeeKable, row=c(3,4,6,10,11,17,22,23,28,29), bold = TRUE)
 GeeKable<- row_spec(GeeKable, row=c(1,8,14,20,26), font_size=18, italic=TRUE)
 GeeKable
-
-  
   
 ```
 
-```{r GEE Plotting}
-library(gridExtra)
-AnnualPlotlm<- lm(Annual.home.range.size..sq.km. ~ Average.group.size + I(Average.group.size^2), data = annualdata)
-summary(AnnualPlot)
-# I did it!! Note: They do not explain AT ALL how their plots were generated like this.
+![Table 1](https://raw.githubusercontent.com/fshortIV/fshortIV-data-replication-assignment/main/Table%201.jpg)
 
-AnnualPlot <- ggplot(data = annualdata, aes(x = Average.group.size, y = Annual.home.range.size..sq.km.))
-AnnualPlot <- AnnualPlot + stat_smooth(method = "lm", formula = y ~ x + I(x^2), fullrange=TRUE) + xlab("Group Size") + ylab("Home Range Size") + theme_classic() + xlim(10, 110) + annotate("text",x=60, y=30, label="Annual: y = 0.003x^2 - 0.346x + 22.539", size=3.5) 
-AnnualPlot
+## Step 5: Discussion and Critque 
 
-MonthlyPlotlm<- lm(Monthly.home.range.size..sq.km. ~ Group.size + I(Group.size^2), data = monthlyhrdata)
-summary(MonthlyPlotlm)
+Overall, my replication was successful in reproducing the results of the study by Markham et al. (2015). The authors found that, interestingly, the relationship between group size and variables such as home range size, daily travel distance, evenness of space use, and fecal glucocorticoid concentrations (fGC) was best modeled as a quadratic with a U-shaped relationship. Intermediate groups had the optimum group size and thus displayed the lowest home range sizes, daily travel distances, evenness of space use, and fecal glucocorticoid concentrations (fGC). In contrast, both smaller and larger groups had greater values for each of these variables. Energetically, this suggests that both smaller and larger groups suffer the cost of traveling farther while foraging. Regarding health, non-intermediate groups may experience higher glucocorticoid concentrations as a result of increased activity or higher stress. This fits with the literature suggesting greater within-group competition for larger groups, but why do smaller groups also need to travel more? The authors posit that small groups may be at a disadvantage regarding between-group competition with other baboons and as such may not gain access to preferred food resources. In addition, small groups may also be at a greater risk of predation which could also cause displacement from resource rich areas. Markham et al. (2015) discuss that while some primates in fission-fusion societies may experience fluctuating group sizes, baboons typically have stable group sizes with more or less the same individuals comprising a group for long periods of time. As a result, group size may have long lasting fitness consequences for baboons. Finally, they consider that this mechanism of optimal group size may explain the versatility and persistence of baboons in a variety of habitats. 
 
-MonthlyPlot <- ggplot(data = monthlyhrdata, aes(x = Group.size, y = Monthly.home.range.size..sq.km.))
-MonthlyPlot <- MonthlyPlot + stat_smooth(method = "lm", formula = y ~ x + I(x^2), fullrange=TRUE) + xlab("Group Size") + ylab("Monthly Home Range Size") + theme_classic() + xlim(10, 110) + annotate("text",x=60, y=22.5, label="Monthly: y = 0.004x^2 - 0.417x + 20.019", size=3.5)
-MonthlyPlot
+Undoubtedly, this study produced valuable and interesting results that helped change our understanding of group size and its predictors. However, my replication has revealed that reproducibility in science is strongly hindered both by standardization of statistical methods and specificity of statistical components. Regarding the former, SPSS is an expensive program that is not open source which limits the ability of individuals such as myself to completely and accurately reproduce the data in this study. Further, I would argue that the consensus for most academic researchers is to use R for statistical methods. Having a consensus such as this ideally offers an optimal environment for reproducing science, as once someone has learned a given programming language such as R they can at least try their hand at replicating any study done via R. Regarding the latter, the exact specifications of the models were not completely clear. For example, the authors did not include how the bivariate relationships were assessed and plotted. More attention should be placed in explicitly laying out statistical methods, even if they seem self-explanatory. *Mic drop*
 
-BothPlot <- AnnualPlot + stat_smooth(aes(x = Group.size, y = Monthly.home.range.size..sq.km.), data = monthlyhrdata, 
-              method = "lm", formula = y ~ x + I(x^2), fullrange=TRUE, color = "red")
-BothPlot <- BothPlot +  annotate("text",x=60, y=28, label="Monthly: y = 0.004x^2 - 0.417x + 20.019", size=3.5) + annotate("text",x=60, y=17, label="Annual", size=4) + annotate("text", x=80, y=7, label="Monthly", size=4)
-BothPlot
 
-DailyTravelPlotlm<- lm(Average.daily.travel..km. ~ Group.size + I(Group.size^2), data = monthlyhrdata)
-summary(DailyTravelPlotlm)
 
-DailyTravelPlot <- ggplot(data = monthlyhrdata, aes(x = Group.size, y = Average.daily.travel..km.))
-DailyTravelPlot <- DailyTravelPlot + stat_smooth(method = "lm", formula = y ~ x + I(x^2),fullrange=TRUE) + xlab("Group Size") + ylab("Daily Travel Distance (km)") + theme_classic() + annotate("text",x=60.5, y=6.4, label="Monthly: y = 0.000475x^2 - 0.056x + 6.249", size=3.5) + annotate("text",x=60, y=5.2, label="Monthly", size=4) + xlim(10,110)
-DailyTravelPlot
+## References
 
-EvennessPlotlm<- lm(Evenness.of.space.use ~ Group.size + I(Group.size^2), data = monthlyhrdata)
-summary(EvennessPlotlm)
+Ezenwa, V. O., Ghai, R. R., McKay, A. F., & Williams, A. E. (2016). Group living and pathogen infection revisited. Current Opinion in Behavioral Sciences, 12, 66-72.
 
-EvennessPlot <- ggplot(data = monthlyhrdata, aes(x = Group.size, y = Evenness.of.space.use))
-EvennessPlot <- EvennessPlot + stat_smooth(method = "lm", formula = y ~ x + I(x^2), fullrange=TRUE) + xlab("Group Size") + ylab("Evenness of space use") + theme_classic() + annotate("text",x=60, y=4.9, label="Monthly: y = 0.0002x^2 - 0.020x + 4.710", size=3.5) + annotate("text", x=60, y=4.35, label="Monthly", size=4) + xlim(10,110)
-EvennessPlot
+Hamilton, W. D. (1971). Geometry for the selfish herd. Journal of theoretical Biology, 31(2), 295-311.
 
-FGCPlotlm<- lm(fGC..g.ng.dry.feces. ~ Group.size + I(Group.size^2), data = monthlyfgcdata)
-summary(FGCPlotlm)
+Majolo, B., de Bortoli Vizioli, A., & Schino, G. (2008). Costs and benefits of group living in primates: group size effects on behaviour and demography. Animal Behaviour, 76(4), 1235-1247.
 
-FGCPlot <- ggplot(data = monthlyfgcdata, aes(x = Group.size, y = fGC..g.ng.dry.feces.))
-FGCPlot <- FGCPlot + stat_smooth(method = "lm", formula = y ~ x + I(x^2), fullrange=TRUE) + xlab("Group Size") + ylab("Fecal glucocorticoid (ng/g dry feces)") + theme_classic() + annotate("text",x=60, y=97, label="Monthly: y = 0.006x^2 - 0.785x + 97.314", size=3.5) + xlim(10,110)+annotate("text", x=60, y=81.5, label="Monthly", size=4)
-FGCPlot
 
-grid.arrange(BothPlot, DailyTravelPlot, EvennessPlot, FGCPlot, nrow = 2)
-```
